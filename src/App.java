@@ -7,33 +7,35 @@ import javafx.stage.Stage;
 
 public class App extends Application {
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         launch(args);
     }
 
     @Override
     public void start(Stage window) throws Exception {
-        int screen_width = 600;
-        int screen_height = 600;
-        int stroke_weight = 1;
+        int screenWidth = 600;
+        int screenHeight = 600;
+        int strokeWeight = 1;
 
         Group root = new Group();
-        
-        Scene game_scene = new Scene(root, screen_width, screen_height);  // Use the variables here
+
+        Scene gameScene = new Scene(root, screenWidth, screenHeight);
 
         // Assuming you have a method draw_lines defined somewhere
-        Grid.draw_lines(root, screen_width, stroke_weight);
-        Tiles.create_boxes(screen_width);
+        Grid.draw_lines(root, screenWidth, strokeWeight);
+        Tiles.create_boxes(root, screenWidth);
 
-        game_scene.setOnMouseClicked(event -> { // click pos
+        gameScene.setOnMouseClicked(event -> {
             if (event.getButton().equals(javafx.scene.input.MouseButton.PRIMARY)) {
-                double click_x = event.getX();
-                double click_y = event.getY();
-                System.out.println("Left mouse clicked at: x=" + click_x + ", y=" + click_y);
+                double clickX = event.getX();
+                double clickY = event.getY();
+
+                int[] position = Tiles.clicked_box(clickX, clickY);
+                Tiles.highlightBox(position[0], position[1]);
             }
         });
 
-        window.setScene(game_scene);
+        window.setScene(gameScene);
         window.setTitle("Mine Sweeper");
         window.show();
     }
