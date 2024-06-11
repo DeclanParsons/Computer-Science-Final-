@@ -21,18 +21,22 @@ public class App extends Application {
 
         Scene gameScene = new Scene(root, screenWidth, screenHeight);
 
-        // Assuming you have a method draw_lines defined somewhere
         Grid.draw_lines(root, screenWidth, strokeWeight);
-        Tiles.create_boxes(root, screenWidth);
+        Tiles[][] boxes = Tiles.create_boxes(root, screenWidth);
 
         gameScene.setOnMouseClicked(event -> {
-            if (event.getButton().equals(javafx.scene.input.MouseButton.PRIMARY)) {
-                double clickX = event.getX();
-                double clickY = event.getY();
+            double click_x = event.getX();
+             double click_y = event.getY();
 
-                int[] position = Tiles.clicked_box(clickX, clickY);
-                Tiles.highlightBox(position[0], position[1]);
+            if (event.getButton().equals(javafx.scene.input.MouseButton.PRIMARY)) {
+
+                Tiles.clicked_box(root, click_x, click_y, boxes);
             }
+
+            if (event.getButton().equals(javafx.scene.input.MouseButton.SECONDARY)){ 
+                Tiles.set_flag(root, click_x, click_y, boxes); 
+            }
+
         });
 
         window.setScene(gameScene);

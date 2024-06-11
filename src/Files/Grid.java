@@ -10,7 +10,7 @@ public class Grid {
         // assuming box 
         double line_dist = screen_width / 18.0; // Correct calculation for line distance
 
-        for (double i = line_dist; i < screen_width; i += line_dist) {
+        for (double i = 0; i <= screen_width; i += line_dist) {
             // horizontal line 
             Line line_x = new Line(0, i, screen_width, i);
             line_x.setStroke(Color.BLACK); // Set the color of the line
