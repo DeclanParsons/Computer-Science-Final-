@@ -1,6 +1,8 @@
 package Files;
 
 import java.util.Random;
+
+import App;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
@@ -18,6 +20,9 @@ public class Tiles {
     private static double box_size; 
     private static Tiles[][] boxes;
 
+    static int bomb_count = 0; 
+    static int flags_remaining = 0;
+
     public Tiles(boolean bomb, boolean clicked, double x_pos, double y_pos, double box_size, boolean has_flag){ 
         this.bomb = bomb; 
         this.clicked = clicked; 
@@ -27,28 +32,26 @@ public class Tiles {
         this.has_flag = has_flag; 
     }
 
-    public static Tiles[][] create_boxes(Group root, int screen_width){ 
+    public static int b_num(){ 
+        return bomb_count; 
+    }
 
+
+    public static Tiles[][] create_boxes(Group root, int screen_width){ 
         box_size = screen_width / 18.0; 
         Tiles[][] boxes = new Tiles[18][18]; 
 
         int max = 8; 
-        int min = 1; //1 in 10 chance to have bomb 
-
-        boolean bomb; 
-        int bomb_count = 0; 
+        int min = 1; // 1 in 10 chance to have bomb 
 
         Random rand = new Random();
 
         for(int i = 0; i < 18; i++){ 
             for(int j = 0; j < 18; j++){ 
 
-                if((rand.nextInt(max - min + 1) + min) == 1){ 
-                    bomb = true; 
+                boolean bomb = (rand.nextInt(max - min + 1) + min) == 1;
+                if(bomb) { 
                     bomb_count++; 
-                    
-                }else{ 
-                    bomb = false; 
                 }
 
                 double x_pos = i * box_size; 
@@ -59,6 +62,7 @@ public class Tiles {
             }
         }
         
+        flags_remaining = bomb_count; // Set the flags to match the bomb count
         System.out.println("Bomb Count: " + bomb_count);
         return boxes; 
     }
@@ -71,14 +75,21 @@ public class Tiles {
 
         System.out.println("Possible Box: " + x + " " + y);
 
-        if(boxes[x][y].clicked){
-            return;
-        } else {
-            boxes[x][y].clicked = true; 
-            Rectangle rectangle = new Rectangle(boxes[x][y].x_pos, boxes[x][y].y_pos, box_size, box_size);
+        Tiles tile = boxes[x][y];
+        Rectangle rectangle = new Rectangle(tile.x_pos, tile.y_pos, box_size, box_size);
 
-            if(boxes[x][y].bomb && boxes[x][y].has_flag == false){ 
+        if(tile.clicked){
+            if(tile.has_flag){ 
+                tile.has_flag = false; 
+                flags_remaining++; 
+                rectangle.setFill(Color.WHITE);
+            }
+        } else {
+            tile.clicked = true; 
+
+            if(tile.bomb && !tile.has_flag){ 
                 System.out.println("you dead");
+                rectangle.setFill(Color.RED);
             } else { 
                 rectangle.setFill(Color.GREEN);
 
@@ -88,8 +99,8 @@ public class Tiles {
                 text.setFont(Font.font("Verdana", FontWeight.BOLD, box_size / 2));
                 text.setFill(Color.BLACK);
                 // Center the text in the rectangle
-                text.setX(boxes[x][y].x_pos + (box_size - text.getBoundsInLocal().getWidth()) / 2);
-                text.setY(boxes[x][y].y_pos + (box_size + text.getBoundsInLocal().getHeight()) / 2);
+                text.setX(tile.x_pos + (box_size - text.getBoundsInLocal().getWidth()) / 2);
+                text.setY(tile.y_pos + (box_size + text.getBoundsInLocal().getHeight()) / 2);
 
                 root.getChildren().add(rectangle);
                 root.getChildren().add(text);
@@ -115,23 +126,31 @@ public class Tiles {
         return num_bombs; 
     }
 
-
-    public static void set_flag(Group root, double click_x, double click_y, Tiles[][] boxes){ 
+    public static int set_flag(Group root, double click_x, double click_y, Tiles[][] boxes) { 
         int x = (int)(click_x / box_size); 
         int y = (int)(click_y / box_size); 
+    
+        Tiles tile = boxes[x][y];
+    
+        if (tile.has_flag) { // Remove flag
+            tile.has_flag = false; 
+            flags_remaining++;
+            tile.clicked = false;
+    
+            Rectangle rectangle = new Rectangle(tile.x_pos, tile.y_pos, box_size, box_size);
+            rectangle.setFill(Color.WHITE);
+            root.getChildren().add(rectangle);
+    
+        } else if (!tile.clicked && flags_remaining > 0) { // Place flag
+            tile.has_flag = true; 
+            tile.clicked = true; 
+            flags_remaining--;
+    
+            Rectangle rectangle = new Rectangle(tile.x_pos, tile.y_pos, box_size, box_size);
+            rectangle.setFill(Color.ORANGE);
+            root.getChildren().add(rectangle);
+        }
 
-        boxes[x][y].has_flag = true; 
-
-        Rectangle rectangle = new Rectangle(boxes[x][y].x_pos, boxes[x][y].y_pos, box_size, box_size);
-
-        rectangle.setFill(Color.ORANGE);
-
-        root.getChildren().add(rectangle);
-
-
+        return flags_remaining; 
     }
-
-
-
-
 }
