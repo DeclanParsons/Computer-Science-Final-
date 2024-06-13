@@ -1,14 +1,15 @@
 package Files;
-
 import java.util.Random;
 
-import App;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.scene.Group;
+import javax.security.auth.login.AppConfigurationEntry;
+
+
 
 public class Tiles {
 
@@ -21,7 +22,11 @@ public class Tiles {
     private static Tiles[][] boxes;
 
     static int bomb_count = 0; 
-    static int flags_remaining = 0;
+    static int flags_remaining = 0; 
+    static int tiles_clicked; // Updated to be initialized after boxes are created
+
+    static boolean game_lose = false; 
+    static boolean game_win = false; 
 
     public Tiles(boolean bomb, boolean clicked, double x_pos, double y_pos, double box_size, boolean has_flag){ 
         this.bomb = bomb; 
@@ -36,19 +41,25 @@ public class Tiles {
         return bomb_count; 
     }
 
+    public static boolean lose_con(){ 
+        return game_lose; 
+    }
+    public static boolean win_con(){ 
+        return game_win; 
+    }
 
     public static Tiles[][] create_boxes(Group root, int screen_width){ 
+        bomb_count = 0; // Reset bomb count each time boxes are created
         box_size = screen_width / 18.0; 
         Tiles[][] boxes = new Tiles[18][18]; 
 
-        int max = 8; 
-        int min = 1; // 1 in 10 chance to have bomb 
+        int max = 6; 
+        int min = 1; // 1 in 6 chance to have bomb 
 
         Random rand = new Random();
 
         for(int i = 0; i < 18; i++){ 
             for(int j = 0; j < 18; j++){ 
-
                 boolean bomb = (rand.nextInt(max - min + 1) + min) == 1;
                 if(bomb) { 
                     bomb_count++; 
@@ -63,12 +74,15 @@ public class Tiles {
         }
         
         flags_remaining = bomb_count; // Set the flags to match the bomb count
+        tiles_clicked = 324 - bomb_count; // Set the tiles clicked count based on the number of bombs
         System.out.println("Bomb Count: " + bomb_count);
         return boxes; 
     }
 
     public static void clicked_box(Group root, double click_x, double click_y, Tiles[][] boxes){ 
         System.out.println("Click Position X: " + click_x + " Click Position Y: " + click_y);
+
+        if(click_y < 600){ 
 
         int x = (int)(click_x / box_size); 
         int y = (int)(click_y / box_size); 
@@ -86,11 +100,14 @@ public class Tiles {
             }
         } else {
             tile.clicked = true; 
+            System.out.println("Tiles Clicked:" + tiles_clicked);
 
             if(tile.bomb && !tile.has_flag){ 
                 System.out.println("you dead");
-                rectangle.setFill(Color.RED);
+                game_lose = true; 
+
             } else { 
+                tiles_clicked--; 
                 rectangle.setFill(Color.GREEN);
 
                 int num_bombs = near_bombs(boxes, x, y);
@@ -106,7 +123,12 @@ public class Tiles {
                 root.getChildren().add(text);
             }
         }
+
+        if(tiles_clicked == 0){ 
+            game_win = true; 
+        }
     }
+}
 
     public static int near_bombs(Tiles[][] boxes, int x, int y){ 
         int num_bombs = 0; 
